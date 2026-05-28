@@ -1,202 +1,209 @@
-# Robot Arm 4 DOF ROS 2 Humble with Kinematics and YOLO
+# Robot Arm 4 DOF Berbasis ROS 2 Humble dengan Kinematika dan YOLO
 
 [![ROS 2](https://img.shields.io/badge/ROS%202-Humble-22314E?style=flat-square)](https://docs.ros.org/en/humble/)
 [![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![YOLO](https://img.shields.io/badge/YOLO-Ultralytics-111111?style=flat-square)](https://docs.ultralytics.com/)
-[![License](https://img.shields.io/badge/License-Not%20specified-lightgrey?style=flat-square)](#license)
+[![Lisensi](https://img.shields.io/badge/Lisensi-Tidak%20dicantumkan-lightgrey?style=flat-square)](#lisensi)
 
-Robot arm 4 DOF berbasis ROS 2 Humble yang menggabungkan kontrol servo melalui PCA9685, forward/inverse kinematics, GUI Tkinter, dan deteksi objek YOLO untuk skenario eye-to-hand pick-and-drop.
+Project ini merupakan sistem robot arm 4 DOF dengan 1 gripper yang dibangun menggunakan ROS 2 Humble. Sistem ini menggabungkan kontrol servo melalui PCA9685, perhitungan kinematika maju dan kinematika balik, antarmuka GUI berbasis Tkinter, serta deteksi objek YOLO untuk skenario eye-to-hand pick-and-drop.
 
-This project is a ROS 2 Humble based 4 DOF robot arm system that combines PCA9685 servo control, forward/inverse kinematics, a Tkinter GUI, and YOLO object detection for eye-to-hand pick-and-drop experiments.
+## Fitur Utama
 
-## Features
+- Kontrol robot arm 4 DOF dan gripper menggunakan driver servo PCA9685.
+- Kinematika maju untuk membaca posisi end-effector.
+- Kinematika balik untuk menggerakkan robot berdasarkan input koordinat X, Y, dan Z.
+- Gerakan pick-and-drop otomatis dengan gripper close dan open secara otomatis.
+- GUI Tkinter untuk input target, monitoring posisi, tampilan kamera, dan visualisasi robot.
+- Deteksi objek YOLO melalui kamera eye-to-hand.
+- Kalibrasi eye-to-hand menggunakan 4 titik dan homography OpenCV.
+- Komunikasi antar modul menggunakan topic ROS 2.
 
-- Robot arm 4 DOF plus gripper with PCA9685 servo driver.
-- Forward kinematics and inverse kinematics for XYZ target movement.
-- Automatic gripper close after reaching pick target and gripper open after drop.
-- Tkinter GUI for manual XYZ input, top-view command, visual robot state, and camera view.
-- YOLO camera node that publishes annotated images and detection data through ROS topics.
-- Eye-to-hand calibration using 4-point homography from camera pixels to robot coordinates.
-- ROS 2 topic based architecture for driver, GUI, status, vision, and pick-drop workflow.
-
-## System Architecture
+## Arsitektur Sistem
 
 ```mermaid
 flowchart LR
-    Camera[USB Camera] --> Vision[YOLO Eye-to-Hand Node]
+    Kamera[Kamera USB] --> Vision[Node Kamera YOLO Eye-to-Hand]
     Model[best.pt] --> Vision
-    Vision -->|/vision/image_annotated| GUI[Arm XYZ GUI Node]
+    Vision -->|/vision/image_annotated| GUI[Node GUI Arm XYZ]
     Vision -->|/vision/detections| GUI
     Vision -->|/vision/status| GUI
-    GUI -->|/arm/target_xyz| Driver[Arm Driver Node]
+    GUI -->|/arm/target_xyz| Driver[Node Driver Robot Arm]
     GUI -->|/arm/pick_drop_xyz| Driver
     GUI -->|/arm/gripper| Driver
-    GUI -->|/arm/home and /arm/stop| Driver
+    GUI -->|/arm/home dan /arm/stop| Driver
     Driver -->|/arm/current_xyz| GUI
     Driver -->|/arm/servo_angle| GUI
     Driver -->|/arm/status| GUI
-    Driver --> PCA9685[PCA9685 Servo Driver]
-    PCA9685 --> Arm[4 DOF Robot Arm + Gripper]
+    Driver --> PCA9685[Driver Servo PCA9685]
+    PCA9685 --> Arm[Robot Arm 4 DOF + Gripper]
 ```
 
-## Project Structure
+## Isi Repository
 
-| File | Description |
+Repository ini dibuat ringkas dan hanya berisi file utama project.
+
+| File | Keterangan |
 | --- | --- |
-| `arm_driver_auto_grip.py` | ROS 2 node for kinematics, servo control, gripper automation, home, stop, and pick-drop execution. |
-| `arm_xyz_input_auto_grip.py` | Tkinter GUI and ROS 2 node for XYZ input, camera display, detection table, visual robot state, and eye-to-hand calibration. |
-| `camera_yolo_eye_to_hand.py` | ROS 2 camera node for running YOLO inference, publishing annotated image frames, detections, and vision status. |
-| `best.pt` | Trained YOLO model used by the camera node. |
-| `requirements.txt` | Python dependencies outside the standard ROS 2 Humble packages. |
+| `arm_driver_auto_grip.py` | Node ROS 2 untuk kontrol servo, kinematika, home, stop, gripper otomatis, dan eksekusi pick-and-drop. |
+| `arm_xyz_input_auto_grip.py` | GUI Tkinter sekaligus node ROS 2 untuk input XYZ, visualisasi robot, tampilan kamera, tabel deteksi, dan kalibrasi eye-to-hand. |
+| `camera_yolo_eye_to_hand.py` | Node ROS 2 untuk membaca kamera, menjalankan YOLO, dan mengirim hasil deteksi ke topic ROS. |
+| `best.pt` | Model YOLO hasil training yang digunakan untuk deteksi objek. |
 
-## Hardware Requirements
+## Kebutuhan Perangkat Keras
 
-- Robot arm 4 DOF with 1 gripper.
-- 5 servo motors connected through PCA9685:
+- Robot arm 4 DOF dengan 1 gripper.
+- 5 servo motor:
   - CH0: base
   - CH1: shoulder
   - CH2: elbow
   - CH3: wrist
   - CH4: gripper
-- PCA9685 servo driver using I2C.
-- USB camera or compatible camera source.
-- Linux/ROS 2 compatible board or computer. Raspberry Pi or similar hardware is recommended for I2C access.
-- External servo power supply matched to the servo requirements.
+- Driver servo PCA9685 dengan komunikasi I2C.
+- Kamera USB atau kamera lain yang kompatibel dengan OpenCV.
+- Komputer atau board yang mendukung ROS 2 Humble dan akses I2C.
+- Power supply eksternal untuk servo.
 
-## Software Requirements
+## Kebutuhan Perangkat Lunak
 
-- Ubuntu 22.04 or compatible Linux environment.
+- Ubuntu 22.04 atau environment Linux yang kompatibel.
 - ROS 2 Humble.
 - Python 3.
-- ROS packages that provide `rclpy`, `std_msgs`, `sensor_msgs`, and `cv_bridge`.
-- Python dependencies listed in `requirements.txt`.
+- Package ROS untuk `rclpy`, `std_msgs`, `sensor_msgs`, dan `cv_bridge`.
+- Library Python:
+  - `ultralytics`
+  - `opencv-python`
+  - `numpy`
+  - `pillow`
+  - `adafruit-blinka`
+  - `adafruit-circuitpython-pca9685`
+  - `adafruit-circuitpython-motor`
 
-Install Python dependencies:
+Contoh instalasi library Python:
 
 ```bash
-pip install -r requirements.txt
+pip install ultralytics opencv-python numpy pillow adafruit-blinka adafruit-circuitpython-pca9685 adafruit-circuitpython-motor
 ```
 
-If you are using ROS 2 Humble on Ubuntu, make sure the ROS environment is sourced before running the nodes:
+Sebelum menjalankan program, pastikan environment ROS 2 Humble sudah aktif:
 
 ```bash
 source /opt/ros/humble/setup.bash
 ```
 
-For Raspberry Pi or hardware with PCA9685, enable I2C before running the arm driver.
+Jika menggunakan Raspberry Pi atau board sejenis, pastikan I2C sudah diaktifkan agar PCA9685 dapat terbaca.
 
-## Running the Project
+## Cara Menjalankan
 
-Run each component in a separate terminal.
+Jalankan setiap komponen pada terminal yang berbeda.
 
-Terminal 1 - robot arm driver:
+Terminal 1 - driver robot arm:
 
 ```bash
 python3 arm_driver_auto_grip.py
 ```
 
-Terminal 2 - YOLO eye-to-hand camera:
+Terminal 2 - kamera YOLO eye-to-hand:
 
 ```bash
 python3 camera_yolo_eye_to_hand.py --ros-args -p model_path:=best.pt -p camera_source:=2
 ```
 
-Terminal 3 - GUI control panel:
+Terminal 3 - GUI kontrol robot:
 
 ```bash
 python3 arm_xyz_input_auto_grip.py
 ```
 
-Adjust `camera_source` if your camera index is different. Common values are `0`, `1`, or `2`.
+Jika kamera tidak terbaca, ubah nilai `camera_source` menjadi index kamera yang sesuai, misalnya `0`, `1`, atau `2`.
 
-## ROS Interfaces
+## Topic ROS 2
 
-### Arm Driver Subscriptions
+### Subscribe pada Driver Robot Arm
 
-| Topic | Type | Data |
+| Topic | Tipe Pesan | Format Data |
 | --- | --- | --- |
 | `/arm/target_xyz` | `std_msgs/Float64MultiArray` | `[x, y, z, duration]` |
 | `/arm/pick_drop_xyz` | `std_msgs/Float64MultiArray` | `[pick_x, pick_y, pick_z, pick_duration, drop_x, drop_y, drop_z, drop_duration]` |
-| `/arm/gripper` | `std_msgs/Float64` | Gripper angle |
-| `/arm/home` | `std_msgs/Empty` | Move arm to home position |
-| `/arm/stop` | `std_msgs/Empty` | Request stop |
+| `/arm/gripper` | `std_msgs/Float64` | Sudut gripper |
+| `/arm/home` | `std_msgs/Empty` | Perintah kembali ke posisi home |
+| `/arm/stop` | `std_msgs/Empty` | Perintah berhenti |
 
-### Arm Driver Publishers
+### Publish dari Driver Robot Arm
 
-| Topic | Type | Data |
+| Topic | Tipe Pesan | Format Data |
 | --- | --- | --- |
 | `/arm/current_xyz` | `std_msgs/Float64MultiArray` | `[x, y, z, pitch]` |
 | `/arm/servo_angle` | `std_msgs/Float64MultiArray` | `[base, shoulder, elbow, wrist, gripper]` |
-| `/arm/status` | `std_msgs/String` | Arm status text |
+| `/arm/status` | `std_msgs/String` | Status robot arm |
 
-### Vision Publishers
+### Publish dari Node Kamera YOLO
 
-| Topic | Type | Data |
+| Topic | Tipe Pesan | Keterangan |
 | --- | --- | --- |
-| `/vision/image_annotated` | `sensor_msgs/Image` | YOLO annotated camera frame |
-| `/vision/detections` | `std_msgs/String` | JSON detection packet with image size, timestamp, bounding boxes, labels, confidence, and centers |
-| `/vision/status` | `std_msgs/String` | Camera and YOLO status text |
+| `/vision/image_annotated` | `sensor_msgs/Image` | Frame kamera yang sudah diberi anotasi YOLO |
+| `/vision/detections` | `std_msgs/String` | Data JSON berisi ukuran gambar, timestamp, bounding box, label, confidence, dan titik tengah objek |
+| `/vision/status` | `std_msgs/String` | Status kamera dan model YOLO |
 
-### Camera Node Parameters
+## Parameter Node Kamera
 
-| Parameter | Default | Description |
+| Parameter | Nilai Default | Keterangan |
 | --- | --- | --- |
-| `model_path` | `best.pt` | YOLO model path |
-| `camera_source` | `2` | Camera index or stream path |
-| `confidence` | `0.5` | YOLO confidence threshold |
-| `publish_hz` | `15.0` | Publish rate for image and detection topics |
+| `model_path` | `best.pt` | Path model YOLO |
+| `camera_source` | `2` | Index kamera atau path stream |
+| `confidence` | `0.5` | Ambang confidence YOLO |
+| `publish_hz` | `15.0` | Frekuensi publish frame dan hasil deteksi |
 
-## Kinematics Notes
+## Kinematika Robot
 
-The arm model uses the following link lengths:
+Sistem menggunakan panjang link sebagai berikut:
 
-| Link | Length |
+| Link | Panjang |
 | --- | --- |
 | `L1` | 10 cm |
 | `L2` | 12 cm |
 | `L3` | 8 cm |
 | `L4` | 16 cm |
 
-Coordinate convention:
+Konvensi koordinat:
 
-- `X`: left/right of robot.
-- `Y`: forward direction.
-- `Z`: upward direction.
+- `X`: arah kiri atau kanan robot.
+- `Y`: arah depan robot.
+- `Z`: arah atas robot.
 
-Home model:
+Posisi home model:
 
-- Base: `0 deg`
-- Shoulder: `90 deg`
-- Elbow: `-90 deg`
-- Wrist: `0 deg`
+- Base: `0 derajat`
+- Shoulder: `90 derajat`
+- Elbow: `-90 derajat`
+- Wrist: `0 derajat`
 
-Home end-effector position:
+Posisi home end-effector:
 
 - `X = 0 cm`
 - `Y = 24 cm`
 - `Z = 22 cm`
 
-The driver computes IK candidates, filters them using servo limits, and chooses a valid solution for the requested XYZ target. During pick movement, the wrist attempts to keep the gripper facing downward, then straightens the wrist after the gripper closes.
+Driver robot menghitung beberapa kandidat solusi inverse kinematics, memfilter solusi berdasarkan batas servo, lalu memilih solusi valid untuk mencapai target XYZ. Saat proses pick, sistem mencoba membuat gripper menghadap ke bawah, menutup gripper setelah target tercapai, lalu meluruskan wrist kembali.
 
-## Eye-to-Hand Calibration
+## Kalibrasi Eye-to-Hand
 
-The GUI supports 4-point eye-to-hand calibration. The calibration maps camera pixel coordinates into robot coordinates using OpenCV homography.
+GUI mendukung kalibrasi eye-to-hand menggunakan 4 titik. Kalibrasi ini mengubah koordinat pixel kamera menjadi koordinat robot dengan homography dari OpenCV.
 
-Generated calibration data is stored locally in:
+File kalibrasi lokal yang dapat terbentuk saat program berjalan:
 
 ```text
 eye_to_hand_calibration.json
 ```
 
-This file is ignored by Git because calibration depends on camera placement, robot position, and workspace setup.
+File tersebut bergantung pada posisi kamera dan setup meja kerja, sehingga tidak disertakan sebagai file utama repository.
 
-## Safety Notes
+## Catatan Keselamatan
 
-- Power servos with a proper external supply. Do not rely on logic power for servo current.
-- Verify servo direction, pulse range, and mechanical limits before running automated pick-drop commands.
-- Keep the workspace clear before enabling motion.
-- Use `/arm/stop` or the GUI stop control if the arm movement becomes unsafe.
+- Gunakan power supply eksternal yang sesuai untuk servo.
+- Periksa arah servo, batas mekanik, dan pulse range sebelum menjalankan gerakan otomatis.
+- Pastikan area kerja robot aman dan tidak terhalang.
+- Gunakan tombol stop pada GUI atau topic `/arm/stop` jika gerakan robot tidak sesuai.
 
-## License
+## Lisensi
 
-No license is specified for this repository.
+Repository ini tidak mencantumkan lisensi.
