@@ -87,10 +87,10 @@ def smoothstep(t):
 
 @dataclass
 class ArmGeometry:
-    L1: float = 10.0
+    L1: float = 8.0
     L2: float = 12.0
     L3: float = 8.0
-    L4: float = 16.0
+    L4: float = 15.0
 
 
 @dataclass
@@ -347,7 +347,7 @@ class RobotArm:
                 name="base",
                 channel=0,
                 model_home_deg=0.0,
-                servo_home_deg=90.0,
+                servo_home_deg=80.0,
                 direction=-1,
                 trim_deg=0.0,
                 servo_min_deg=0.0,
@@ -389,8 +389,8 @@ class RobotArm:
                 servo_home_deg=90.0,
                 direction=-1,
                 trim_deg=0.0,
-                servo_min_deg=10.0,
-                servo_max_deg=170.0,
+                servo_min_deg=0.0,
+                servo_max_deg=180.0,
                 min_pulse=600,
                 max_pulse=2400,
             ),
@@ -403,7 +403,7 @@ class RobotArm:
             servo_home_deg=90.0,
             direction=+1,
             trim_deg=0.0,
-            servo_min_deg=0.0,
+            servo_min_deg=30.0,
             servo_max_deg=150.0,
             min_pulse=600,
             max_pulse=2400,
@@ -428,13 +428,13 @@ class RobotArm:
             "base": 0.0,
             "shoulder": 90.0,
             "elbow": -90.0,
-            "wrist": 0.0,
+            "wrist": -90.0,
         }
 
         self.q_current = dict(self.q_home)
-        self.gripper_current = 90.0
-        self.gripper_open_duration = 0.8
-        self.gripper_close_duration = 0.8
+        self.gripper_current = 30.0
+        self.gripper_open_duration = 0.3
+        self.gripper_close_duration = 1.5
         self.gripper_rate_hz = 50
         self.stop_request = False
         self.last_pitch_auto = 0.0
@@ -461,10 +461,10 @@ class RobotArm:
         for name in self.joints.keys():
             self.hw_servos[name].angle = 90.0
 
-        self.hw_gripper.angle = 90.0
+        self.hw_gripper.angle = 30.0
 
         self.q_current = dict(self.q_home)
-        self.gripper_current = 90.0
+        self.gripper_current = 30.0
         self.last_pitch_auto = 0.0
 
     def within_limit(self, q: Dict[str, float]) -> bool:
@@ -636,7 +636,7 @@ class RobotArm:
 
     def home(self):
         self.move_joints(self.q_home, duration=1.5)
-        self.set_gripper(90.0)
+        self.set_gripper(30.0)
         self.last_pitch_auto = 0.0
 
     def set_gripper(self, angle: float):
@@ -674,7 +674,7 @@ class RobotArm:
         return self.gripper_current
 
     def gripper_open(self):
-        self.move_gripper(0.0, self.gripper_open_duration)
+        self.move_gripper(30.0, self.gripper_open_duration)
 
     def gripper_close(self):
         self.move_gripper(120.0, self.gripper_close_duration)
@@ -983,10 +983,22 @@ class ArmDriverNode(Node):
                         return
 
                     self.arm.gripper_open()
+
+                    if self.arm.stop_request:
+                        self.publish_status("PICK DROP STOPPED AFTER GRIPPER OPEN")
+                        return
+
+                    self.publish_status("DROP DONE, GO HOME")
+                    self.arm.home()
+
+                    if self.arm.stop_request:
+                        self.publish_status("PICK DROP STOPPED DURING HOME")
+                        return
+
                     pose = self.arm.current_pose()
 
                     self.publish_status(
-                        f"PICK DROP OK + GRIPPER OPEN | "
+                        f"PICK DROP OK + GRIPPER OPEN + HOME | "
                         f"X={pose['x']:.2f}, Y={pose['y']:.2f}, "
                         f"Z={pose['z']:.2f}, Pitch={pose['pitch']:.2f}, "
                         f"Gripper={self.arm.gripper_current:.2f}"
